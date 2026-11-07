@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Friendsgiving Game Night</title>
+<link href="https://fonts.googleapis.com/css2?family=Bowlby+One&family=Figtree:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+<style>
+h1{font-size:clamp(2.4rem,8vw,4.6rem);color:var(--gold)}
+.sub{color:var(--dim);max-width:34em;margin:1rem 0 2.5rem}
+.games{display:grid;gap:1rem;grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
+.game{display:block;background:var(--cell);border-radius:14px;padding:1.4rem;text-decoration:none;color:var(--text);border-left:8px solid var(--gold)}
+.game:hover{background:var(--cell2)}
+.game h2{font-size:1.5rem;margin-bottom:.4rem}
+.game p{margin:0;color:var(--dim);font-size:.95rem}
+.game.soon{opacity:.55;border-left-color:var(--cell2);pointer-events:none}
+</style></head><body>
+<main class="wrap">
+  <h1>Friendsgiving<br>Game Night</h1>
+  <p class="sub">Pick a game, gather the teams, and settle who really knows their stuffing.</p>
+  <div class="games" id="games"></div>
+</main>
+<script src="assets/fall.js"></script>
+<script>
+// To add a game: copy a folder in /games, then add one line here.
+const GAMES=[
+  {name:"Jeopardy",desc:"Two rounds and a Final Jeopardy, all fall and Friendsgiving.",path:"games/jeopardy/"},
+  {name:"Family Feud",desc:"Survey says... coming soon.",path:"",soon:true},
+];
+document.getElementById('games').innerHTML=GAMES.map(g=>
+ `<a class="game ${g.soon?'soon':''}" href="${g.path||'#'}"><h2>${g.name}</h2><p>${g.desc}</p></a>`).join('');
+</script></body></html>
