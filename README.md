@@ -22,14 +22,10 @@ Open `games/jeopardy/questions.js` (on GitHub: click the file, then the pencil i
 - Tap a team name to mark who picks next. Use − and + for $100 changes, or tap a score to type an exact number.
 - Daily Doubles ask for a wager. Final Jeopardy takes each team's wager, then scores Right/Wrong and shows the winner.
 
-## Family Feud
-Open `games/family-feud/questions.js` to edit. It has three games (Turkey Time, Holiday Mayhem, Mistletoe Madness), each with 3 rounds and 5 Fast Money questions. Answers are `["Answer", points]`.
-- `multipliers` sets the point multiplier per round (default 1x, 2x, 3x).
-- `fastMoney` sets the target score, bonus points, and seconds for each player.
-- Play: pick a game, enter teams, click an answer to reveal it, use Strike for wrong answers, then award the bank to a team. After the last round, Fast Money is played by one team (two players, timed).
+## Phone buzzers
+See `SETUP-BUZZERS.md` for the one-time Firebase setup. Players join at `/play/`; the presenter screen is password-protected (set it in `assets/presenter-config.js`).
 
-## Add another game
-
+## Add another game (Family Feud, etc.)
 1. Make a folder like `games/family-feud/` with its own `index.html`, script, and data file. Copy the jeopardy folder as a starting point.
 2. Add one line to the `GAMES` list in the root `index.html`.
 3. Include `../../assets/style.css` and `../../assets/fall.js` to get the shared fall look.
