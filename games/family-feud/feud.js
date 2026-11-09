@@ -69,27 +69,19 @@ function showPick() {
 }
 
 /* ---------- setup ---------- */
-function showSetup(names) {
-  const g = D.games[S.game];
-  names = names || (S.teams.length ? S.teams.map(t => t.name) : D.teams.slice());
-  app.innerHTML = `<div class="setup"><h1>${esc(g.name)}</h1><p class="theme">${esc(g.theme)}</p><div id="joinbox"></div>
-    <p>Enter your team names. Add as many as you need (up to 6).</p>
-    <div id="tl">${names.map((n, i) => `<div class="trow"><input aria-label="Team ${i + 1} name" value="${esc(n)}" placeholder="Team ${i + 1}"><button class="ghost" data-x="${i}" aria-label="Remove team ${i + 1}">✕</button></div>`).join('')}</div>
-    <div class="row"><button class="ghost" id="add">Add team</button><button id="go">Start game</button></div>
-    <div class="row"><button class="ghost sm" id="chg">Change game</button><a href="../../">All games</a></div></div>`;
-  Host.paintJoin('joinbox');
-  const read = () => [...app.querySelectorAll('#tl input')].map(i => i.value);
-  app.querySelector('#add').onclick = () => { const n = read(); if (n.length < 6) { n.push(''); showSetup(n); } };
-  app.querySelectorAll('[data-x]').forEach(b => b.onclick = () => { const n = read(); n.splice(+b.dataset.x, 1); showSetup(n.length ? n : ['']); });
-  app.querySelector('#chg').onclick = () => { S.teams = read().map(s => s.trim()).filter(Boolean).map(name => ({ name, score: 0 })); S.phase = 'pick'; S.game = -1; save(); render(); };
-  app.querySelector('#go').onclick = () => {
-    const n = read().map(s => s.trim()).filter(Boolean);
-    if (n.length < 2) { alert('Add at least two team names.'); return; }
-    S.teams = n.map(name => ({ name, score: 0 }));
-    S.rounds = g.rounds.map(r => ({ rev: r.a.map(() => false), strikes: 0, award: null }));
-    S.ri = 0; S.control = -1; S.fm = null; S.phase = 'round'; save(); render();
+function showSetup() {
+  const g=D.games[S.game];
+  app.innerHTML=`<div class="setup"><h1>${esc(g.name)}</h1><p class="theme">${esc(g.theme)}</p><div id="joinbox"></div><p>Share the 4-digit room code. Players enter their names and create or join teams on their phones.</p><div id="teamwait" class="card">Waiting for teams…</div><div class="row"><button id="go">Start game</button></div><div class="row"><button class="ghost sm" id="chg">Change game</button><a href="../../">All games</a></div></div>`;
+  Host.paintJoin('joinbox'); paintTeamWait();
+  app.querySelector('#go').onclick=()=>{
+    const entries=Object.entries(Host.roster||{});if(entries.length<2){alert('Have players create at least two teams first.');return;}
+    S.teams=entries.map(([,t])=>({name:t.name,score:0}));const index={};entries.forEach(([id],i)=>index[id]=i);
+    Object.entries(Host.players).forEach(([pid,p])=>{if(p.teamId&&index[p.teamId]!==undefined)Buzz.r('assign/'+pid).set(index[p.teamId]);});
+    S.rounds=g.rounds.map(r=>({rev:r.a.map(()=>false),strikes:0,award:null}));S.ri=0;S.control=-1;S.fm=null;S.phase='round';save();render();
   };
+  app.querySelector('#chg').onclick=()=>{S.phase='pick';S.game=-1;save();render();};
 }
+function paintTeamWait(){const box=document.getElementById('teamwait');if(!box)return;const entries=Object.entries(Host.roster||{});box.innerHTML=entries.length?entries.map(([id,t])=>`<div class="prow"><b>${esc(t.name)}</b><span>${Object.values(Host.players).filter(p=>p.teamId===id).length} players</span></div>`).join(''):'Waiting for players to create teams…';}
 
 /* ---------- regular rounds ---------- */
 const bankOf = () => {
@@ -259,4 +251,4 @@ function showFinal() {
   app.querySelector('#back').onclick = () => { S.phase = S.fm ? 'fm' : 'round'; save(); render(); };
 }
 
-Host.gate(() => { render(); Host.init(() => S.teams, () => { if (S.phase === 'setup') Host.paintJoin('joinbox'); else render(); }); });
+Host.gate(() => { render(); Host.init(() => S.teams, () => { if (S.phase === 'setup') { Host.paintJoin('joinbox'); paintTeamWait(); } else render(); }); window.addEventListener('fg-roster', paintTeamWait); });

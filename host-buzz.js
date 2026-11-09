@@ -1,10 +1,10 @@
 // Presenter-side buzz-in helper shared by games (Family Feud uses it). Needs buzz.js + firebase-config.js.
 window.Host = (function () {
-  const H = { room: null, players: {}, assign: {}, err: '' };
+  const H = { room: null, players: {}, assign: {}, roster: {}, err: '' };
   let attempt = Date.now(), ref = null, getTeams = () => [], last = null;
   const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
   H.url = () => new URL('../../play/?room=' + H.room, location.href).href;
-  H.setState = (open, fresh) => { if (!H.room) return; if (fresh) attempt = Date.now(); Buzz.r('state').set({ open, attempt: 'a' + attempt }); };
+  H.setState = (open, fresh) => { if (!H.room) return; if (fresh) attempt = Date.now(); Buzz.r('state').update({ open, attempt: 'a' + attempt, phase: 'play' }); };
   H.reset = () => { ref && ref.off(); ref = null; H.setState(false, true); };
   H.syncTeams = arr => { last = arr; if (H.room) Buzz.r('teams').set(arr).catch(() => {}); };
   H.open = cb => {
@@ -27,8 +27,9 @@ window.Host = (function () {
     if (Buzz.configured()) {
       try {
         await Buzz.init(); H.room = await Buzz.createRoom(localStorage.getItem('fg-room')); localStorage.setItem('fg-room', H.room);
-        Buzz.r('players').on('value', s => { H.players = s.val() || {}; H.paintPlayers(); });
+        Buzz.r('players').on('value', s => { H.players = s.val() || {}; H.paintPlayers(); window.dispatchEvent(new Event('fg-roster')); });
         Buzz.r('assign').on('value', s => { H.assign = s.val() || {}; H.paintPlayers(); });
+        Buzz.r('teamRoster').on('value', s => { H.roster = s.val() || {}; H.paintPlayers(); window.dispatchEvent(new Event('fg-roster')); });
         H.setState(false, true); if (last) Buzz.r('teams').set(last).catch(() => {});
       } catch (e) { console.error(e); H.err = 'Buzz-in setup failed: ' + e.message; }
     }
@@ -44,17 +45,11 @@ window.Host = (function () {
   };
   H.showPlayers = () => { if (document.getElementById('pp')) return; const m = document.createElement('div'); m.className = 'modal'; m.id = 'pp'; document.body.appendChild(m); H.paintPlayers(); };
   H.paintPlayers = () => {
-    const ids = Object.keys(H.players), c = document.getElementById('pcount'); if (c) c.textContent = ids.length;
-    const m = document.getElementById('pp'); if (!m) return;
-    const teams = getTeams();
-    m.innerHTML = `<div class="meta">Room ${H.room} · ${ids.length} player${ids.length === 1 ? '' : 's'}</div><div id="qr2"></div>
-      <div class="plist">${ids.map(id => `<div class="prow"><span>${esc(H.players[id].name)}</span><select data-p="${id}"><option value="">No team</option>${teams.map((t, i) => `<option value="${i}"${H.assign[id] === i ? ' selected' : ''}>${esc(t.name)}</option>`).join('')}</select><button class="ghost sm" data-k="${id}">Remove</button></div>`).join('') || '<p class="hint">Waiting for players to join…</p>'}</div>
-      <div class="row"><button id="rnd">Randomize teams</button><button class="ghost" id="pclose">Done</button></div>`;
-    qr('qr2');
-    m.querySelectorAll('select').forEach(s => s.onchange = () => Buzz.r('assign/' + s.dataset.p).set(s.value === '' ? null : +s.value));
-    m.querySelectorAll('[data-k]').forEach(b => b.onclick = () => { Buzz.r('players/' + b.dataset.k).remove(); Buzz.r('assign/' + b.dataset.k).remove(); });
-    m.querySelector('#rnd').onclick = () => { if (!teams.length) return; const a = {}; Object.keys(H.players).sort(() => Math.random() - .5).forEach((id, i) => a[id] = i % teams.length); Buzz.r('assign').set(a); };
-    m.querySelector('#pclose').onclick = () => m.remove();
+    const ids=Object.keys(H.players), c=document.getElementById('pcount'); if(c)c.textContent=ids.length;
+    const m=document.getElementById('pp'); if(!m)return;
+    const rows=Object.entries(H.roster);
+    m.innerHTML=`<div class="meta">Room ${H.room} · ${ids.length} player${ids.length===1?'':'s'}</div><p class="hint">Players choose or create their own teams on their phones.</p><div class="plist">${rows.map(([id,t])=>`<div class="prow"><b>${esc(t.name)}</b><span>${ids.filter(pid=>H.players[pid]?.teamId===id).map(pid=>esc(H.players[pid].name)).join(', ')||'No players yet'}</span></div>`).join('')||'<p class="hint">Waiting for teams…</p>'}</div><button class="ghost" id="pclose">Done</button>`;
+    m.querySelector('#pclose').onclick=()=>m.remove();
   };
   document.addEventListener('keydown', e => { if (e.key === 'Escape') document.getElementById('pclose')?.click(); });
   return H;

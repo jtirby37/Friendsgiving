@@ -18,7 +18,7 @@ Keep the directory structure intact. In particular, do not move the files out of
 - **Jeopardy:** `games/jeopardy/`
 - **Phone buzzer join page:** `play/`
 
-Open the root homepage to choose a game. Run the host game on the laptop or TV; players join from their phones using the QR code or room code shown on the host screen.
+Open the root homepage to choose a game. Run the presenter game on the laptop; players join from their phones with the 4-digit room code, then create or join a team. Jeopardy has a separate **Public TV board** link for the TV, while the presenter page stays private. Final Jeopardy accepts one wager and typed answer per team.
 
 ## Edit questions
 
@@ -34,7 +34,7 @@ The games work without Firebase; you can still run them and score manually. To e
 - `assets/firebase-config.js` contains the public Firebase web-app configuration.
 - `assets/presenter-config.js` contains the presenter-screen password.
 
-The presenter password is a convenience gate, not real authentication. Anyone who can inspect this public repository can read it. The Firebase web config is also public by design; the Realtime Database rules are what control access.
+The presenter password is a convenience gate, not real authentication. Anyone who can inspect this public repository can read it. The Firebase web config is also public by design; the Realtime Database rules control access. The Public TV board hides answers until the presenter reveals them, but this is a static GitHub Pages site: question-bank JavaScript files are downloadable by anyone with the site URL, so this is suitable for a casual game night, not a secure exam or paid competition.
 
 ## Useful notes
 

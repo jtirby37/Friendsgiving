@@ -18,9 +18,9 @@ window.Buzz = (function () {
       return ready;
     },
     async createRoom(saved) {
-      if (saved) { const h = await db.ref('rooms/' + saved + '/host').get(); if (h.exists() && h.val() === uid) { B.room = saved; return saved; } }
-      const A = 'ABCDEFGHJKMNPQRSTUVWXYZ';
-      for (let k = 0; k < 20; k++) {
+      if (saved && /^\d{4}$/.test(saved)) { const h = await db.ref('rooms/' + saved + '/host').get(); if (h.exists() && h.val() === uid) { B.room = saved; return saved; } }
+      const A = '0123456789';
+      for (let k = 0; k < 80; k++) {
         const c = Array.from({ length: 4 }, () => A[Math.random() * A.length | 0]).join('');
         const r = await db.ref('rooms/' + c + '/host').transaction(v => v === null ? uid : undefined);
         if (r.committed) { B.room = c; return c; }
