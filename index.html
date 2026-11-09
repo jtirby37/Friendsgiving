@@ -1,77 +1,25 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#2a130d">
-  <meta name="description" content="Friendsgiving Game Night — Family Feud, Jeopardy, and live phone buzzers.">
-  <title>Friendsgiving Game Night</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Bowlby+One&family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/style.css">
-  <style>
-    .home{width:min(1080px,100%);margin:0 auto;padding:clamp(1.5rem,5vw,4rem) 1.25rem 3rem}
-    .hero{text-align:center;padding:clamp(1.5rem,6vw,4.5rem) 0 2.5rem}
-    .eyebrow{color:var(--olive);font-weight:800;letter-spacing:.18em;text-transform:uppercase;font-size:.8rem}
-    .hero h1{color:var(--gold);font-size:clamp(2.7rem,9vw,6.2rem);line-height:.98;margin:.55rem 0 1rem;text-shadow:0 5px 0 #4a2113}
-    .hero p{max-width:620px;margin:0 auto;color:var(--dim);font-size:clamp(1rem,2.4vw,1.25rem)}
-    .hero .hero-actions{display:flex;gap:.7rem;justify-content:center;flex-wrap:wrap;margin-top:1.5rem}
-    .games{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem;margin:1rem 0 2rem}
-    .game-card{display:flex;flex-direction:column;min-height:270px;padding:clamp(1.2rem,3vw,2rem);border-radius:20px;background:linear-gradient(145deg,#743417,#4b2113);border:1px solid #a65327;box-shadow:0 14px 35px #16090466;color:var(--text);text-decoration:none;transition:transform .18s ease,border-color .18s ease}
-    .game-card:hover{transform:translateY(-4px);border-color:var(--gold)}
-    .game-icon{font-size:2.5rem;margin-bottom:.6rem}
-    .game-card h2{font-size:clamp(1.6rem,4vw,2.3rem);color:var(--gold)}
-    .game-card p{color:var(--dim);margin:.6rem 0 1.2rem}
-    .game-card .launch{margin-top:auto;font-weight:800;color:var(--gold)}
-    .how{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.8rem;margin-top:2rem}
-    .how article{background:#3a1a10;border:1px solid #6e2f14;border-radius:14px;padding:1rem}
-    .how b{display:block;color:var(--gold);margin-bottom:.25rem}
-    .how span{color:var(--dim);font-size:.92rem}
-    .home-footer{text-align:center;color:var(--dim);font-size:.85rem;margin-top:2.5rem}
-    @media(max-width:700px){.games{grid-template-columns:1fr}.game-card{min-height:220px}.how{grid-template-columns:1fr}.hero{padding-top:2rem}}
-    @media(prefers-reduced-motion:reduce){.game-card{transition:none}.game-card:hover{transform:none}}
-  </style>
-</head>
-<body>
-  <main class="home">
-    <header class="hero">
-      <div class="eyebrow">Good food · Great friends · Questionable answers</div>
-      <h1>Friendsgiving<br>Game Night</h1>
-      <p>Pick a game, split into teams, and see who actually knows their Thanksgiving trivia. Put the site on the TV and let everyone play along.</p>
-      <div class="hero-actions">
-        <a class="home-button" href="games/family-feud/">Browse Family Feud</a>
-        <a class="home-button secondary" href="games/jeopardy/">Play Jeopardy</a>
-      </div>
-    </header>
-
-    <section aria-label="Choose a game">
-      <div class="games">
-        <a class="game-card" href="games/family-feud/">
-          <div class="game-icon" aria-hidden="true">🍂</div>
-          <h2>Family Feud</h2>
-          <p>Survey-style questions, strikes, face-offs, and Fast Money. Choose a themed game and compete for the top answers.</p>
-          <span class="launch">Set up Family Feud →</span>
-        </a>
-        <a class="game-card" href="games/jeopardy/">
-          <div class="game-icon" aria-hidden="true">🦃</div>
-          <h2>Jeopardy!</h2>
-          <p>Two rounds of clues, Daily Doubles, wagers, and Final Jeopardy. Keep score for up to eight teams.</p>
-          <span class="launch">Set up Jeopardy →</span>
-        </a>
-      </div>
-    </section>
-
-    <section aria-label="How game night works">
-      <div class="eyebrow">How to play</div>
-      <div class="how">
-        <article><b>1. Put it on the big screen</b><span>Open a game on the laptop or TV that everyone can see.</span></article>
-        <article><b>2. Create your teams</b><span>Enter team names and start a round. The host controls the board and scoring.</span></article>
-        <article><b>3. Join on your phones</b><span>When enabled, scan the on-screen QR code to join the room and use your phone as a buzzer.</span></article>
-      </div>
-    </section>
-    <footer class="home-footer">Made for Friendsgiving. May the best team win.</footer>
-  </main>
-  <script src="assets/fall.js"></script>
-</body>
-</html>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#2a130d">
+<meta name="description" content="Friendsgiving Game Night — join as a player, show the board, or run the games."><title>Friendsgiving Game Night</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bowlby+One&family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="assets/style.css">
+<style>
+.home{width:min(980px,100%);margin:0 auto;padding:clamp(1rem,4vw,3rem) 1.1rem 2.5rem}.hero{text-align:center;padding:1rem 0 1.4rem}.eyebrow{color:var(--olive);font-weight:800;letter-spacing:.16em;text-transform:uppercase;font-size:.76rem}.hero h1{color:var(--gold);font-size:clamp(2.6rem,8vw,5.2rem);line-height:.98;margin:.45rem 0 .65rem;text-shadow:0 5px 0 #4a2113}.hero p{max-width:620px;margin:0 auto;color:var(--dim);font-size:1.05rem}
+.home-section{margin:1rem 0;padding:clamp(1.2rem,3vw,2rem);border:1px solid #79401f;border-radius:20px;background:linear-gradient(145deg,#482113ed,#30150ff2);box-shadow:0 12px 30px #16090455}.home-section.player{border-color:#a65327;background:linear-gradient(145deg,#693016,#3c1a10)}.section-head{display:flex;align-items:center;gap:1rem;margin-bottom:.45rem}.section-icon{display:grid;place-items:center;flex:0 0 52px;width:52px;height:52px;border-radius:15px;background:#21100b88;font-size:1.8rem}.section-head h2{font-size:clamp(1.45rem,4vw,2rem);color:var(--gold)}.home-section p{color:var(--dim);margin:.35rem 0 1rem}.section-actions,.room-entry{display:flex;gap:.65rem;flex-wrap:wrap;align-items:center}.home-button{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:.7rem 1.15rem;border-radius:10px;background:var(--gold);color:#2a130d;text-decoration:none;font-weight:800}.home-button.secondary{background:transparent;color:var(--text);border:2px solid #a65327}.room-entry{margin-top:.9rem;max-width:520px}.room-entry label{font-weight:700;color:var(--text);font-size:.9rem}.room-entry input{max-width:150px;letter-spacing:.15em;text-align:center}.room-entry .home-button{min-height:44px}.games{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.75rem;margin-top:.8rem}.game-card{display:flex;gap:.8rem;align-items:center;padding:1rem;border-radius:13px;background:#25100b66;border:1px solid #79401f;color:var(--text);text-decoration:none;transition:transform .18s ease,border-color .18s ease}.game-card:hover{transform:translateY(-2px);border-color:var(--gold)}.game-icon{font-size:1.9rem}.game-card strong{display:block;color:var(--gold);font-size:1.05rem}.game-card small{color:var(--dim)}
+.cache-area{text-align:center;margin:1.8rem auto .5rem;padding:1rem;max-width:650px}.cache-area p{font-size:.88rem;color:var(--dim);margin:.4rem auto .8rem}.cache-button{background:transparent;border:1px solid #9b6a51;color:#f0d5c0;font-size:.9rem;padding:.55rem .9rem}#cache-status{min-height:1.4em;font-size:.85rem;color:var(--olive);margin:.45rem 0 0}.home-footer{text-align:center;color:var(--dim);font-size:.82rem;margin-top:1.3rem}
+@media(max-width:620px){.games{grid-template-columns:1fr}.section-head{align-items:flex-start}.section-icon{flex-basis:44px;width:44px;height:44px}.room-entry input{flex:1}.room-entry .home-button{flex:1}}@media(prefers-reduced-motion:reduce){.game-card{transition:none}.game-card:hover{transform:none}}
+</style></head>
+<body><main class="home">
+<header class="hero"><div class="eyebrow">Good food · Great friends · Questionable answers</div><h1>Friendsgiving<br>Game Night</h1><p>Choose your role and jump into the game. Players use their phones, the display goes on the TV, and the moderator runs the show.</p></header>
+<section class="home-section player" aria-labelledby="players-title"><div class="section-head"><div class="section-icon" aria-hidden="true">📱</div><div><div class="eyebrow">For everyone playing</div><h2 id="players-title">Players — Join a Game</h2></div></div><p>Enter the room code shown by the moderator, then choose or create your team.</p><div class="section-actions"><a class="home-button" href="play/">Join as a player →</a></div><form class="room-entry" id="player-room-form"><label for="player-room">Already have a room code?</label><input id="player-room" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" placeholder="4-digit code" aria-label="Four-digit room code"><button class="home-button secondary" type="submit">Continue</button></form></section>
+<section class="home-section" aria-labelledby="display-title"><div class="section-head"><div class="section-icon" aria-hidden="true">📺</div><div><div class="eyebrow">For the shared screen</div><h2 id="display-title">Display — Put It on the TV</h2></div></div><p>Open the public Jeopardy board on the TV or projector. Enter the same room code the moderator is using.</p><form class="room-entry" id="display-room-form"><label for="display-room">Room code</label><input id="display-room" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" placeholder="4-digit code" required aria-label="Four-digit room code for display"><button class="home-button" type="submit">Open TV display →</button></form></section>
+<section class="home-section" aria-labelledby="moderator-title"><div class="section-head"><div class="section-icon" aria-hidden="true">🎤</div><div><div class="eyebrow">Host controls</div><h2 id="moderator-title">Moderator / Presenter</h2></div></div><p>Choose the game you’re hosting. These links open the moderator controls and presenter view.</p><div class="games"><a class="game-card" href="games/family-feud/"><span class="game-icon" aria-hidden="true">🍂</span><span><strong>Family Feud</strong><small>Questions, strikes, scores &amp; Fast Money</small></span></a><a class="game-card" href="games/jeopardy/"><span class="game-icon" aria-hidden="true">🦃</span><span><strong>Jeopardy!</strong><small>Game board, clues, wagers &amp; scoring</small></span></a></div></section>
+<section class="cache-area" aria-label="Clear saved data"><button type="button" class="cache-button" id="clear-cache">Clear local cache &amp; saved game data</button><p>Use this on a shared device before game night to remove saved names, room codes, presenter sign-in for this tab, and locally saved game progress. This does not delete the live room or data in Firebase.</p><div id="cache-status" role="status" aria-live="polite"></div></section>
+<footer class="home-footer">Made for Friendsgiving. May the best team win.</footer></main>
+<script src="assets/fall.js"></script><script>
+function wireRoomForm(formId,inputId,destination,required){document.getElementById(formId).addEventListener('submit',event=>{event.preventDefault();const input=document.getElementById(inputId);const code=input.value.trim();if(!/^\d{4}$/.test(code)){input.focus();input.setCustomValidity('Enter a 4-digit room code.');input.reportValidity();input.setCustomValidity('');return;}location.href=destination+'?room='+encodeURIComponent(code);});}
+wireRoomForm('player-room-form','player-room','play',false);wireRoomForm('display-room-form','display-room','board',true);
+document.getElementById('clear-cache').addEventListener('click',async()=>{if(!window.confirm('Clear saved data on this device? This removes locally saved game progress, names, room codes, and presenter sign-in for this tab. It will not delete the live Firebase room.'))return;const status=document.getElementById('cache-status');try{localStorage.clear();sessionStorage.clear();if('caches'in window){const keys=await caches.keys();await Promise.all(keys.map(key=>caches.delete(key)));}status.textContent='Local saved data cleared. Reloading…';location.reload();}catch(error){status.textContent='Some local data could not be cleared. Please clear this site’s data in your browser settings.';}});
+</script></body></html>

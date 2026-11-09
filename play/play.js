@@ -1,7 +1,7 @@
 const el = document.getElementById('p'), Q = new URLSearchParams(location.search);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt = n => (n < 0 ? '-$' : '$') + Math.abs(n || 0).toLocaleString();
-let st = {}, teams = {}, scoreTeams = [], assign = null, bz = {}, submissions = {}, pending = false, me = null, watchAtt = null, watchRef = null, watchSubmissionId = null, watchSubmissionRef = null, myName = '', roomCode = '', myTeamId = null; 
+let st = {}, teams = {}, scoreTeams = [], assign = null, bz = {}, submissions = {}, pending = false, me = null, watchAtt = null, watchRef = null, watchSubmissionId = null, watchSubmissionRef = null, myName = '', roomCode = '', myTeamId = null, teamErr = ''; 
 function joinScreen(msg='') {
   el.innerHTML = `<h1>Friendsgiving Buzzer</h1>${msg ? `<p class="err">${esc(msg)}</p>` : ''}<input id="c" inputmode="numeric" autocomplete="one-time-code" placeholder="4-digit room code" maxlength="4" value="${esc(Q.get('room') || localStorage.getItem('fg-p-room') || '')}"><input id="n" placeholder="Your name" maxlength="20" value="${esc(localStorage.getItem('fg-p-name') || '')}"><button id="go">Continue</button>`;
   el.querySelector('#go').onclick = () => connect(el.querySelector('#c').value, el.querySelector('#n').value);
@@ -25,12 +25,12 @@ async function connect(code, name) {
     paint();
   } catch(e) { joinScreen('Could not join: ' + e.message + (e.code==='auth/admin-restricted-operation' ? ' Enable Anonymous sign-in in Firebase Authentication.' : '')); }
 }
-async function assignTeam(id) { myTeamId=id; await Buzz.r('players/' + me + '/teamId').set(id); paint(); }
+async function assignTeam(id) { try { await Buzz.r('players/' + me + '/teamId').set(id); myTeamId=id; teamErr=''; paint(); } catch(e) { teamErr='Could not join that team: ' + e.message; paint(); } }
 function teamScreen() {
   const rows=Object.entries(teams);
-  el.innerHTML=`<h1>Choose your team</h1><p>Welcome, ${esc(myName)}. Create a team or join one.</p><div class="teamchoices">${rows.map(([id,t])=>`<button class="teamchoice" data-team="${esc(id)}">Join ${esc(t.name)}</button>`).join('')}</div><input id="newteam" maxlength="24" placeholder="New team name"><button id="create">Create team</button><p class="hint">Everyone on the same team shares one Final Jeopardy submission.</p>`;
+  el.innerHTML=`<h1>Choose your team</h1><p>Welcome, ${esc(myName)}. Create a team or join one.</p>${teamErr?`<p class="err">${esc(teamErr)}</p>`:''}<div class="teamchoices">${rows.map(([id,t])=>`<button class="teamchoice" data-team="${esc(id)}">Join ${esc(t.name)}</button>`).join('')}</div><input id="newteam" maxlength="24" placeholder="New team name"><button id="create">Create team</button><p class="hint">Everyone on the same team shares one Final Jeopardy submission.</p>`;
   el.querySelectorAll('[data-team]').forEach(b=>b.onclick=()=>assignTeam(b.dataset.team));
-  el.querySelector('#create').onclick=async()=>{const name=el.querySelector('#newteam').value.trim();if(!name)return;const ref=Buzz.r('teamRoster').push();await ref.set({name,createdAt:Buzz.ts()});await assignTeam(ref.key);};
+  el.querySelector('#create').onclick=async()=>{const name=el.querySelector('#newteam').value.trim();if(!name){teamErr='Enter a team name first.';return teamScreen();}const btn=el.querySelector('#create');btn.disabled=true;btn.textContent='Creating…';try{const ref=Buzz.r('teamRoster').push();await ref.set({name,createdAt:Buzz.ts()});await assignTeam(ref.key);}catch(e){teamErr='Could not create team: '+e.message;teamScreen();}};
 }
 function watch(){if(!st.attempt||st.attempt===watchAtt)return;watchRef&&watchRef.off();watchAtt=st.attempt;bz={};watchRef=Buzz.r('buzzes/'+st.attempt);watchRef.on('value',s=>{bz=s.val()||{};paint();});}
 function paint(){
