@@ -40,3 +40,17 @@ button.sm{padding:.3em .8em;font-size:.85rem}
 .win{font-size:clamp(1.8rem,5vw,3rem);color:var(--olive)}
 .rank{list-style:none;padding:0;margin:0;width:min(420px,100%);display:grid;gap:.4rem}
 .rank li{display:flex;justify-content:space-between;background:var(--cell);border-radius:10px;padding:.6rem 1rem}
+.join{display:flex;gap:1rem;align-items:center;background:var(--cell);padding:1rem;border-radius:12px;text-align:left}
+.code{font-family:var(--display);font-size:2.6rem;color:var(--gold);letter-spacing:.2em;line-height:1.1}
+#qr,#qr2{background:#fff;padding:6px;border-radius:8px;line-height:0;flex:none}
+.buzzbar{display:flex;gap:.6rem}
+.bzlist{display:grid;gap:.4rem;width:min(560px,100%)}
+.bz{display:flex;gap:.6rem;align-items:center;justify-content:space-between;background:var(--cell);border-radius:10px;padding:.5rem .8rem;text-align:left}
+.bz.first{border:3px solid var(--gold)}
+.bz small{color:var(--dim)}
+.bz .acts{display:flex;gap:.4rem}
+.bz .ok{background:var(--olive)}.bz .no{background:var(--cran);color:#fff}
+.plist{display:grid;gap:.5rem;width:min(560px,100%);max-height:45vh;overflow:auto}
+.prow{display:flex;gap:.5rem;align-items:center;background:var(--cell);padding:.4rem .7rem;border-radius:10px}
+.prow span{flex:1;font-weight:700;text-align:left}
+select{font:inherit;padding:.3em;border-radius:8px;background:#1d0b07;color:var(--text);border:2px solid var(--cell2)}

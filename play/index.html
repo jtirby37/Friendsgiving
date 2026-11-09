@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Join the game</title>
+<link href="https://fonts.googleapis.com/css2?family=Bowlby+One&family=Figtree:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+<style>
+#p{max-width:460px;margin:0 auto;padding:1.2rem;display:grid;gap:1rem;text-align:center}
+h1{color:var(--gold);font-size:2rem}
+.err{color:#ff9a8a;margin:0}
+.who{color:var(--dim)}
+#buzz{width:min(78vw,300px);aspect-ratio:1;border-radius:50%;margin:.5rem auto;font-family:var(--display);font-size:2.2rem;border:8px solid #1d0b07;touch-action:manipulation;user-select:none}
+#buzz.go{background:var(--cran);color:#fff;box-shadow:0 0 0 6px var(--gold)}
+#buzz.got{background:var(--olive);color:#2a130d}
+#buzz.off{background:var(--cell);color:var(--dim);cursor:default}
+.card{background:var(--cell);border-radius:14px;padding:1rem}
+.card .big{font-family:var(--display);font-size:2.4rem;color:var(--gold)}
+.board{display:grid;gap:.3rem;margin-top:.6rem;text-align:left}
+.board div{display:flex;justify-content:space-between;padding:.3rem .6rem;border-radius:8px}
+.board .me{background:var(--cell2);font-weight:700}
+</style></head><body>
+<div id="p"></div>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="../assets/fall.js"></script>
+<script src="../assets/firebase-config.js"></script>
+<script src="../assets/buzz.js"></script>
+<script src="play.js"></script>
+</body></html>
