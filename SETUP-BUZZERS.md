@@ -36,23 +36,26 @@ Without this, both games still work normally; you can run them and score manuall
           ".write": "auth != null && auth.uid === root.child('rooms').child($room).child('host').val()"
         },
         "publicState": {
-          ".read": "auth != null",
+          ".read": true,
           ".write": "auth != null && auth.uid === root.child('rooms').child($room).child('host').val()"
         },
         "teamRoster": {
           ".read": "auth != null",
-          "$teamId": { ".write": "auth != null && !data.exists()" }
+          "$teamId": {
+            ".write": "auth != null && !data.exists()"
+          }
         },
         "finalSubmissions": {
           ".read": "auth != null && auth.uid === root.child('rooms').child($room).child('host').val()",
           "$teamId": {
-            ".read": "auth != null && root.child('rooms').child($room).child('players').child(auth.uid).child('teamId').val() === $teamId",
             ".write": "auth != null && !data.exists() && root.child('rooms').child($room).child('players').child(auth.uid).child('teamId').val() === $teamId"
           }
         },
         "players": {
           ".read": "auth != null",
-          "$pid": { ".write": "auth != null && (auth.uid === $pid || auth.uid === root.child('rooms').child($room).child('host').val())" }
+          "$pid": {
+            ".write": "auth != null && (auth.uid === $pid || auth.uid === root.child('rooms').child($room).child('host').val())"
+          }
         },
         "buzzes": {
           ".read": "auth != null",
@@ -68,7 +71,7 @@ Without this, both games still work normally; you can run them and score manuall
   }
 }
 ```
-These rules restrict score/state changes to the room creator, let players create a team once and submit once for their own team, and allow a phone to buzz once per attempt while buzzers are open. Final submissions are readable by the presenter and the submitting team only. Do not replace these with a room-wide read rule: that would expose private Final Jeopardy submissions. The presenter password is still only a convenience gate; it is not server-side authentication.
+These rules restrict score/state changes to the room creator, let players create a team once and submit once for their own team, and allow a phone to buzz once per attempt while buzzers are open. The presenter can read the complete `finalSubmissions` list; players can write only their own team's one-time submission and do not read the private submissions list. This avoids Firebase's cascading read-permission behavior exposing other teams' answers. `publicState` is readable by the TV board without signing in, and must contain only content intended for the audience. The presenter password is still only a convenience gate; it is not server-side authentication.
 
 ## 4. Connect the site
 1. Click the gear next to **Project Overview > Project settings > General**. Under **Your apps**, click the web icon `</>`, name it, and register it (skip hosting).
