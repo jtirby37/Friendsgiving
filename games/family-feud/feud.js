@@ -3,7 +3,23 @@ const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(
 const fresh = () => ({ phase: 'pick', game: -1, teams: [], ri: 0, rounds: [], control: -1, fm: null });
 let S = fresh();
 try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.phase && (s.game < 0 || D.games[s.game])) S = Object.assign(fresh(), s); } catch (e) {}
-const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} Host.syncTeams(S.teams.map(t => ({ name: t.name, score: t.score, unit: 'pts' }))); };
+function publishBoard() {
+  if (!Host.room) return;
+  const g = D.games[S.game];
+  const pub = { game: 'feud', phase: S.phase, title: g?.name || D.title, teams: S.teams.map(t => ({name:t.name,score:t.score})), control:S.control };
+  if (S.phase === 'round') {
+    const r = g.rounds[S.ri], st = S.rounds[S.ri];
+    Object.assign(pub,{question:r.q,round:S.ri+1,multiplier:D.multipliers[S.ri]||1,bank:bankOf(),strikes:st.strikes,slots:r.a.map((a,i)=>st.rev[i]?{revealed:true,answer:a[0],points:a[1]}:{revealed:false})});
+  } else if (S.phase === 'fm') {
+    pub.stage=S.fm.stage;
+    if (S.fm.stage === 'done') {
+      pub.results=g.fast.map((f,q)=>({question:f.q,players:[0,1].map(p=>{const k=S.fm.picks[p][q];return {answer:k.ans>=0&&k.ans!==null?f.a[k.ans][0]:k.said||'No answer',points:fmPts(p,q)};})}));
+      pub.total=fmTotal(0)+fmTotal(1);
+    }
+  }
+  Buzz.r('publicState').set(pub).catch(e=>console.error('TV update failed',e));
+}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} Host.syncTeams(S.teams.map(t => ({ name: t.name, score: t.score, unit: 'pts' }))); publishBoard(); };
 
 /* ---------- sound ---------- */
 let muted = false, ac;
@@ -28,7 +44,7 @@ function render() {
   stopTimer();
   ({ pick: showPick, setup: showSetup, round: showRound, fm: showFM, final: showFinal })[S.phase]();
 }
-const tools = () => `<div class="tools">${Host.room ? `<button class="ghost sm" id="players">Players (<span id="pcount">${Object.keys(Host.players).length}</span>)</button>` : ''}<button class="ghost sm" id="mute">${muted ? '🔇 Sound off' : '🔊 Sound on'}</button><a href="../../">All games</a><button class="ghost sm" id="newg">New game</button></div>`;
+const tools = () => `<div class="tools">${Host.room ? `<a target="_blank" rel="noopener" href="../../board/?room=${Host.room}">TV display · ${Host.room}</a>` : ''}${Host.room ? `<button class="ghost sm" id="players">Players (<span id="pcount">${Object.keys(Host.players).length}</span>)</button>` : ''}<button class="ghost sm" id="mute">${muted ? '🔇 Sound off' : '🔊 Sound on'}</button><a href="../../">All games</a><button class="ghost sm" id="newg">New game</button></div>`;
 function bindTools() {
   app.querySelector('#mute').onclick = e => { muted = !muted; try { localStorage.setItem(MUTE, muted ? '1' : '0'); } catch (_) {} e.target.textContent = muted ? '🔇 Sound off' : '🔊 Sound on'; };
   app.querySelector('#newg').onclick = newGame;
@@ -71,7 +87,7 @@ function showPick() {
 /* ---------- setup ---------- */
 function showSetup() {
   const g=D.games[S.game];
-  app.innerHTML=`<div class="setup"><h1>${esc(g.name)}</h1><p class="theme">${esc(g.theme)}</p><div id="joinbox"></div><p>Share the 4-digit room code. Players enter their names and create or join teams on their phones.</p><div id="teamwait" class="card">Waiting for teams…</div><div class="row"><button id="go">Start game</button></div><div class="row"><button class="ghost sm" id="chg">Change game</button><a href="../../">All games</a></div></div>`;
+  app.innerHTML=`<div class="setup"><h1>${esc(g.name)}</h1><p class="theme">${esc(g.theme)}</p><div id="joinbox"></div>${Host.room ? `<p><a target="_blank" rel="noopener" href="../../board/?room=${Host.room}">Open TV display · ${Host.room}</a></p>` : ''}<p>Share the 4-digit room code. Players enter their names and create or join teams on their phones.</p><div id="teamwait" class="card">Waiting for teams…</div><div class="row"><button id="go">Start game</button></div><div class="row"><button class="ghost sm" id="chg">Change game</button><a href="../../">All games</a></div></div>`;
   Host.paintJoin('joinbox'); paintTeamWait();
   app.querySelector('#go').onclick=()=>{
     const entries=Object.entries(Host.roster||{});if(entries.length<2){alert('Have players create at least two teams first.');return;}
@@ -91,11 +107,11 @@ const bankOf = () => {
 function playHTML(pop) {
   const r = D.games[S.game].rounds[S.ri], st = S.rounds[S.ri], bank = bankOf();
   const slots = r.a.map((a, i) => `<button class="slot ${st.rev[i] ? 'rev' : ''} ${i === pop ? 'pop' : ''}" data-s="${i}" aria-label="Answer ${i + 1}: ${st.rev[i] ? esc(a[0]) + ', ' + a[1] + ' points' : 'hidden'}">
-    <span class="n">${i + 1}</span><span class="txt">${st.rev[i] ? esc(a[0]) : '• • • • •'}</span><span class="pts">${st.rev[i] ? a[1] : ''}</span></button>`).join('');
+    <span class="n">${i + 1}</span><span class="txt">${esc(a[0])}</span><span class="pts">${a[1]}</span></button>`).join('');
   const aw = st.award
     ? `<div class="awarded">Awarded <b>${st.award.amount}</b> to <b>${esc(S.teams[st.award.team].name)}</b><button class="ghost sm" id="undo">Undo</button></div>`
     : `<div class="award">${S.teams.map((t, i) => `<button data-a="${i}" ${bank ? '' : 'disabled'}>Award ${bank} to ${esc(t.name)}</button>`).join('')}</div>`;
-  return `<div class="board">${slots}</div>
+  return `<p class="hint">Private answer key — tap an answer to reveal or hide it on the TV. Highlighted answers are public.</p><div class="board">${slots}</div>
     <div class="bankrow"><div class="bank">Bank: ${bank}</div><div class="strikes" aria-label="${st.strikes} strikes">${[0, 1, 2].map(i => `<span class="x ${i < st.strikes ? 'on' : ''}">✕</span>`).join('')}</div></div>
     <div class="row ctl"><button class="ghost" id="strike" ${st.strikes >= 3 ? 'disabled' : ''}>✕ Strike</button><button class="ghost sm" id="clr">Clear strikes</button><button class="ghost sm" id="revall" ${st.award ? '' : 'disabled'} title="Available after you award the bank">Reveal the rest</button></div>
     ${st.strikes >= 3 && !st.award ? '<p class="hint">Three strikes! The other team can steal the bank with one right answer.</p>' : ''}
@@ -251,4 +267,4 @@ function showFinal() {
   app.querySelector('#back').onclick = () => { S.phase = S.fm ? 'fm' : 'round'; save(); render(); };
 }
 
-Host.gate(() => { render(); Host.init(() => S.teams, () => { if (S.phase === 'setup') { Host.paintJoin('joinbox'); paintTeamWait(); } else render(); }); window.addEventListener('fg-roster', paintTeamWait); });
+Host.gate(() => { render(); Host.init(() => S.teams, () => { render(); publishBoard(); }); window.addEventListener('fg-roster', paintTeamWait); });
