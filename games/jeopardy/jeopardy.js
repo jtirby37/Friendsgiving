@@ -14,10 +14,17 @@ function newGame() {
 function render() { document.querySelectorAll('.modal').forEach(m => m.remove()); ({ setup: showSetup, board: showBoard, final: showFinal, results: showResults })[S.phase](); }
 
 /* ---------- buzz-in (optional; needs Firebase config) ---------- */
-let room = null, players = {}, assign = {}, roster = {}, attempt = Date.now(), curRef = null, buzzErr = '';
+let room = null, players = {}, assign = {}, roster = {}, attempt = Date.now(), curRef = null, buzzErr = '', activeClue = null;
 const setState = (open, fresh) => { if (!room) return; if (fresh) attempt = Date.now(); Buzz.r('state').update({ open, attempt: 'a' + attempt, phase: S.phase === 'final' ? 'final' : 'play', teamIds:Object.keys(roster) }); };
 const syncTeams = () => { if (room) Buzz.r('teams').set(S.teams.map(t => ({ name: t.name, score: t.score }))).catch(() => {}); };
-function publishPublic(extra={}) { if (!room) return; const r=S.round, rd=D.rounds[r]; const pub={game:'jeopardy',phase:S.phase,teams:S.teams.map(t=>({name:t.name,score:t.score})),roundName:rd?.name||'Final Jeopardy',categories:rd?.categories.map(c=>c.name)||[],values:rd?.values||[],used:S.used,round:r,...extra}; Buzz.r('publicState').set(pub).catch(()=>{}); }
+function publishPublic(extra={}) {
+  if (!room) return;
+  const r=S.round, rd=D.rounds[r], { clearClue, ...safeExtra } = extra;
+  const clue = clearClue ? null : (safeExtra.clue || activeClue);
+  const pub={game:'jeopardy',phase:S.phase,teams:S.teams.map(t=>({name:t.name,score:t.score})),roundName:rd?.name||'Final Jeopardy',categories:rd?.categories.map(c=>c.name)||[],values:rd?.values||[],used:S.used,round:r,...safeExtra};
+  if (clue) pub.clue = clue; else delete pub.clue;
+  Buzz.r('publicState').set(pub).catch(()=>{});
+}
 const joinUrl = () => new URL('../../play/?room=' + room, location.href).href;
 const boardUrl = () => new URL('../../board/?room=' + room, location.href).href;
 async function initBuzz() {
@@ -52,7 +59,8 @@ function showSetup() {
   paintJoin(); paintSetupTeams();
   app.querySelector('#go').onclick=async()=>{
     const entries=Object.entries(roster); if(!entries.length){alert('Have players create at least one team first.');return;}
-    S=fresh(); S.teams=entries.map(([,t])=>({name:t.name,score:0}));
+    S=fresh(); S.teams=entries.map(([,t])=>({name:t.name,score:0})); S.teamIds=entries.map(([id])=>id);
+    if(room) await Buzz.r('finalSubmissions').remove();
     const index={}; entries.forEach(([id],i)=>index[id]=i);
     Object.entries(players).forEach(([pid,p])=>{if(p.teamId && index[p.teamId]!==undefined) Buzz.r('assign/'+pid).set(index[p.teamId]);});
     S.phase='board';save();render();
@@ -110,9 +118,19 @@ function openClue(c, r) {
     ${room ? `<div class="buzzbar"><button id="bopen">Open buzzers</button><button class="ghost" id="block">Lock buzzers</button></div><div id="bz" class="bzlist"><span class="hint">Buzzers locked. Finish reading, then open them.</span></div>` : ''}
     ${awardRow()}<button class="ghost" id="close">Close clue</button>`;
   document.body.appendChild(m);
-  const ans = m.querySelector('.answer'); publishPublic({clue:{category:cat.name,value,question:clue.q,answerVisible:false}});
+  const ans = m.querySelector('.answer');
+  // The presenter sees the answer immediately; it stays out of publicState until Reveal is tapped.
+  ans.innerHTML = clue.a;
+  activeClue = {category:cat.name,value,question:clue.q,answerVisible:false};
+  publishPublic({clue:activeClue});
   const score = (i, s) => { S.teams[i].score += value * s; if (s > 0) { S.control = i; ans.innerHTML = clue.a; setState(false); m.querySelectorAll('.award button').forEach(x => x.disabled = true); } save(); };
-  m.querySelector('#rev').onclick = () => { ans.innerHTML = clue.a; publishPublic({clue:{category:cat.name,value,question:clue.q,answer:clue.a,answerVisible:true}}); };
+  m.querySelector('#rev').onclick = () => {
+    ans.innerHTML = clue.a;
+    activeClue = {category:cat.name,value,question:clue.q,answer:clue.a,answerVisible:true};
+    publishPublic({clue:activeClue});
+    m.querySelector('#rev').disabled = true;
+    m.querySelector('#rev').textContent = 'Answer revealed on TV';
+  };
   m.querySelectorAll('.award button').forEach(b => b.onclick = () => {
     score(+b.dataset.i, +b.dataset.s); b.parentElement.querySelectorAll('button').forEach(x => x.disabled = true);
   });
@@ -133,25 +151,26 @@ function openClue(c, r) {
     m.querySelector('#block').onclick = () => setState(false);
     box.onclick = e => { const b = e.target.closest('button[data-t]'); if (b) { score(+b.dataset.t, +b.dataset.s); b.disabled = true; b.parentElement.querySelector(b.dataset.s === '1' ? '.no' : '.ok').disabled = true; } };
   }
-  m.querySelector('#close').onclick = () => { curRef && curRef.off(); curRef = null; setState(false); publishPublic({clearClue:true}); S.used[`${S.round}-${c}-${r}`] = true; save(); m.remove(); render(); };
+  m.querySelector('#close').onclick = () => { curRef && curRef.off(); curRef = null; setState(false); activeClue = null; publishPublic({clearClue:true}); S.used[`${S.round}-${c}-${r}`] = true; save(); m.remove(); render(); };
 }
 
 /* ---------- final jeopardy ---------- */
 function showFinal() {
   const f=D.final, st=S.fstage; let b=`<div class="meta">${esc(f.category)}</div>`;
   if(st===0)b+=`<p>Players submit one wager and one typed answer per team from their phones. The host can monitor submissions here.</p><button id="n">Reveal Final Jeopardy clue and open submissions</button>`;
-  if(st>=1)b+=`<div class="clue">${f.q}</div><p class="hint">Teams have one submission each. Submissions are locked when you reveal the answer.</p>`;
+  if(st>=1)b+=`<div class="clue">${f.q}</div><div class="answer"><small>Presenter answer (private)</small><br>${f.a}</div><p class="hint">Teams have one submission each. Submissions are locked when you reveal the answer.</p>`;
   if(st===1)b+=`<div id="submission-list" class="card">Waiting for team submissions…</div><button id="n">Lock submissions and reveal answer</button>`;
   if(st===2)b+=`<div class="answer">${f.a}</div><div class="award">${S.teams.map((t,i)=>`<div><span>${esc(t.name)} <small>wagered ${fmt(S.wagers[i]||0)}</small></span><button class="ok" data-i="${i}" data-s="1"${S.fdone[i]?' disabled':''}>Right</button><button class="no" data-i="${i}" data-s="-1"${S.fdone[i]?' disabled':''}>Wrong</button></div>`).join('')}</div><button id="n">Show final scores</button>`;
   app.innerHTML=`<div class="top"><h1>Final Jeopardy!</h1>${tools()}</div><div class="stage">${b}</div>${scoreBar()}`;
   bindScores();bindTools();
   publishPublic(st>=1?{finalQuestion:f.q,answerVisible:st>=2,...(st>=2?{finalAnswer:f.a}:{})}:{finalQuestion:'Final Jeopardy'});
   const n=app.querySelector('#n');
-  if(st===0)n.onclick=()=>{S.wagers=S.teams.map(()=>0);S.fstage=1;if(room)Buzz.r('state').update({phase:'final',finalOpen:true,teamIds:Object.keys(roster),finalQuestion:f.q});save();render();};
+  if(st===0)n.onclick=()=>{S.wagers=S.teams.map(()=>0);S.fstage=1;if(room)Buzz.r('state').update({phase:'final',finalOpen:true,teamIds:S.teamIds||Object.keys(roster),finalQuestion:f.q});save();render();};
   if(st===1){
+    const ids=S.teamIds||Object.keys(roster);
     const ref=room?Buzz.r('finalSubmissions'):null;
-    if(ref)ref.on('value',snap=>{const subs=snap.val()||{};const box=app.querySelector('#submission-list');if(!box)return;box.innerHTML=S.teams.map((t,i)=>{const id=Object.keys(roster)[i],sub=id?subs[id]:null;return `<p><b>${esc(t.name)}:</b> ${sub?`Submitted · wager ${fmt(sub.wager)} · ${esc(sub.answer)}`:'Not submitted'}</p>`;}).join('');});
-    n.onclick=()=>{S.wagers=S.teams.map((t,i)=>{const id=Object.keys(roster)[i];return id?0:0;});if(room)Buzz.r('finalSubmissions').get().then(snap=>{const subs=snap.val()||{};S.wagers=S.teams.map((t,i)=>{const id=Object.keys(roster)[i];return id&&subs[id]?Number(subs[id].wager)||0:0;});S.fstage=2;Buzz.r('state').update({phase:'final',finalOpen:false,teamIds:Object.keys(roster)});save();render();});else{S.fstage=2;save();render();}};
+    if(ref)ref.on('value',snap=>{const subs=snap.val()||{};const box=app.querySelector('#submission-list');if(!box)return;box.innerHTML=S.teams.map((t,i)=>{const id=ids[i],sub=id?subs[id]:null;return `<p><b>${esc(t.name)}:</b> ${sub?`<span class="okmsg">Submitted</span> · wager ${fmt(sub.wager)} · ${esc(sub.answer)}`:'Not submitted'}</p>`;}).join('');},err=>{const box=app.querySelector('#submission-list');if(box)box.innerHTML=`<p class="err">Could not load submissions: ${esc(err.message)}. Check Firebase rules.</p>`;});
+    n.onclick=async()=>{n.disabled=true;n.textContent='Locking submissions…';try{const snap=room?await Buzz.r('finalSubmissions').get():null;const subs=snap?.val()||{};S.wagers=S.teams.map((t,i)=>{const id=ids[i];return id&&subs[id]?Number(subs[id].wager)||0:0;});S.fstage=2;if(room)await Buzz.r('state').update({phase:'final',finalOpen:false,teamIds:ids});save();render();}catch(err){n.disabled=false;n.textContent='Lock submissions and reveal answer';alert('Could not lock Final Jeopardy submissions: '+err.message);}};
   }
   if(st===2){
     n.onclick=()=>{S.phase='results';if(room)Buzz.r('state').update({phase:'play',finalOpen:false});save();render();};
